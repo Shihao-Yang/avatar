@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src https://avatar.35-233-251-145.nip.io; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Shihao's personal space for thinking through statistics with an AI companion.">
+  <title>Shihao's Studio</title>
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/katex.css"><link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <section id="auth-gate" class="auth-gate" aria-label="Sign in">
+    <div class="auth-card">
+      <div class="brand-icon" aria-hidden="true">s<span>·</span></div>
+      <p class="eyebrow">SHIHAO'S STUDIO</p>
+      <h1>A space to<br><em>think things through.</em></h1>
+      <p class="intro">Your personal companion for questions,<br>explanations, and a little more clarity.</p>
+      <button id="github-sign-in" class="github-sign-in" disabled>Sign in with GitHub <span aria-hidden="true">↗</span></button>
+      <p id="auth-status" role="status">Sign in to enter your personal studio.</p>
+      <p class="auth-footnote">A personal experiment by Shihao Yang.<br>Access is limited to approved accounts.</p>
+      <noscript>Enable JavaScript to sign in and use the studio.</noscript>
+    </div>
+  </section>
+  <aside class="sidebar" id="sidebar" hidden>
+    <a class="wordmark" href="./" aria-label="Shihao's Studio home"><span class="brand-icon">s<span>·</span></span><span>Shihao's Studio<small>A PERSONAL EXPERIMENT</small></span></a>
+    <button class="new-chat" id="new-chat"><span aria-hidden="true">＋</span> New conversation <span class="key-hint">⌘ K</span></button>
+    <div class="section-label">YOUR CONVERSATIONS</div>
+    <nav id="history" aria-label="Conversation history"><p class="empty-history">Good questions start here.</p></nav>
+    <div class="sidebar-bottom">
+      <button class="library-button" id="open-library"><span aria-hidden="true">▤</span><span>Reference notes<small id="note-count">Loading notes…</small></span><span aria-hidden="true">↗</span></button>
+      <div class="account"><div class="mini-avatar">SY</div><div>Personal workspace<small id="account-detail">Saved on this server</small></div><button id="sign-out" class="sign-out" hidden>Sign out</button></div>
+    </div>
+  </aside>
+  <main hidden>
+    <header class="topbar"><div class="topbar-left"><button id="menu" class="icon-button mobile-only" aria-label="Toggle navigation">☰</button><span class="breadcrumb">Learning companion</span><span class="version">EARLY EXPLORATION</span></div><button id="connection" class="connection" title="Check connection"><span class="status-dot"></span><span id="connection-label">Connecting…</span></button></header>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section class="conversation-scroll" id="scroll-region" aria-label="Conversation">
+      <div id="welcome" class="welcome">
+        <div class="avatar-wrap"><button class="portrait" id="photo-button" title="Add your photo" aria-label="Add your photo"><span class="initials">SY</span><img id="portrait-image" alt="Shihao's selected portrait" hidden></button><span class="avatar-spark" aria-hidden="true">✳</span></div>
+        <p class="eyebrow">A SPACE TO THINK THINGS THROUGH</p>
+        <h1>Let's make it<br><em>make sense.</em></h1>
+        <p class="intro">A question, a result that feels off, a concept worth revisiting.<br class="desktop-break"> Bring it here. We'll work through the reasoning together.</p>
+        <div class="suggestions">
+          <button class="suggestion" data-mode="explain" data-prompt="Explain the difference between a confidence interval and a prediction interval with a simple example."><span class="card-icon">↗</span><strong>Untangle a concept</strong><span>Confidence or prediction interval?</span><span class="card-arrow" aria-hidden="true">→</span></button>
+          <button class="suggestion" data-mode="check" data-prompt="An AI says a high R-squared proves that X causes Y. Help me check that reasoning."><span class="card-icon">◎</span><strong>Check the reasoning</strong><span>What does a high R² actually tell us?</span><span class="card-arrow" aria-hidden="true">→</span></button>
+          <button class="suggestion" data-mode="practice" data-prompt="Give me one short practice question about interpreting a regression slope. Let me try before explaining the answer."><span class="card-icon">✳</span><strong>Try it yourself</strong><span>A small question. A useful insight.</span><span class="card-arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="welcome-note"><span aria-hidden="true">◇</span> Built around explanations, evidence, and your own judgment.</div>
+      </div>
+      <div id="messages" class="messages" aria-live="polite" aria-relevant="additions text"></div>
+    </section>
+    <div class="composer-area">
+      <form id="composer" class="composer">
+        <label class="sr-only" for="prompt">Your question</label>
+        <textarea id="prompt" rows="2" maxlength="12000" placeholder="What would you like to think through?" required></textarea>
+        <div class="composer-bottom"><div class="mode-tabs" aria-label="Teaching mode"><button type="button" data-mode="explain" class="mode active" aria-pressed="true">Explain</button><button type="button" data-mode="practice" class="mode" aria-pressed="false">Practice</button><button type="button" data-mode="check" class="mode" aria-pressed="false">Check my thinking</button></div><button class="send" id="send" aria-label="Send question" title="Send question" disabled>↑</button><button type="button" class="stop" id="stop" hidden>■ Stop</button></div>
+      </form>
+      <div class="composer-caption"><span>AI companion, configured by Shihao. Check important conclusions.</span><span class="model-label">GPT-6.1 Sol <span aria-hidden="true">·</span> Codex CLI</span></div>
+    </div>
+  </main>
+  <input type="file" id="photo-input" accept="image/png,image/jpeg" hidden>
+  <dialog id="library-dialog"><div class="dialog-header"><div><p class="eyebrow">THE REFERENCE SHELF</p><h2 id="library-title">Notes to think with</h2></div><button class="icon-button" id="close-library" aria-label="Close notes">×</button></div><div id="library-content"></div><p class="dialog-footer">A small, selected collection. Current assessments and schedules are not included.</p></dialog>
+</body>
+</html>
