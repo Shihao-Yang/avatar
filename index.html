@@ -30,8 +30,9 @@
     <div class="section-label">YOUR CONVERSATIONS</div>
     <nav id="history" aria-label="Conversation history"><p class="empty-history">Good questions start here.</p></nav>
     <div class="sidebar-bottom">
+      <button id="open-students" class="student-admin-button" hidden>Student access <span aria-hidden="true">↗</span></button>
       <button class="library-button" id="open-library"><span aria-hidden="true">▤</span><span>Reference notes<small id="note-count">Loading notes…</small></span><span aria-hidden="true">↗</span></button>
-      <div class="account"><div class="mini-avatar">SY</div><div>Personal workspace<small id="account-detail">Saved on this server</small></div><button id="sign-out" class="sign-out" hidden>Sign out</button></div>
+      <div class="account"><div class="mini-avatar">SY</div><div><span id="workspace-label">Personal workspace</span><small id="account-detail">Saved on this server</small></div><button id="sign-out" class="sign-out" hidden>Sign out</button></div>
     </div>
   </aside>
   <main hidden>
@@ -58,10 +59,20 @@
         <textarea id="prompt" rows="2" maxlength="12000" placeholder="What would you like to think through?" required></textarea>
         <div class="composer-bottom"><div class="mode-tabs" aria-label="Teaching mode"><button type="button" data-mode="explain" class="mode active" aria-pressed="true">Explain</button><button type="button" data-mode="practice" class="mode" aria-pressed="false">Practice</button><button type="button" data-mode="check" class="mode" aria-pressed="false">Check my thinking</button></div><button class="send" id="send" aria-label="Send question" title="Send question" disabled>↑</button><button type="button" class="stop" id="stop" hidden>■ Stop</button></div>
       </form>
+      <p id="usage-limit" class="usage-limit" hidden></p>
       <div class="composer-caption"><span>AI companion, configured by Shihao. Check important conclusions.</span><span class="model-label">GPT-6.1 Sol <span aria-hidden="true">·</span> Codex CLI</span></div>
     </div>
   </main>
   <input type="file" id="photo-input" accept="image/png,image/jpeg" hidden>
   <dialog id="library-dialog"><div class="dialog-header"><div><p class="eyebrow">THE REFERENCE SHELF</p><h2 id="library-title">Notes to think with</h2></div><button class="icon-button" id="close-library" aria-label="Close notes">×</button></div><div id="library-content"></div><p class="dialog-footer">A small, selected collection. Current assessments and schedules are not included.</p></dialog>
+  <dialog id="student-dialog" aria-labelledby="student-title">
+    <div class="dialog-header"><div><p class="eyebrow">ADMINISTRATOR</p><h2 id="student-title">Student access</h2></div><button id="close-students" class="icon-button" aria-label="Close student access">×</button></div>
+    <p id="student-status" class="student-help" role="status"></p>
+    <form id="student-form"><label for="student-usernames">Add GitHub accounts</label><p class="student-help">Paste up to 20 usernames, separated by commas or new lines. Use the usernames collected through your class roster.</p><textarea id="student-usernames" rows="3" maxlength="2000" placeholder="One GitHub username per line" required></textarea><button class="student-primary" type="submit">Review accounts</button></form>
+    <div id="student-preview" class="student-preview"></div><button id="approve-students" class="student-primary" hidden disabled>Approve accounts</button>
+    <div class="student-section"><h3 id="student-count">Approved accounts</h3><div id="student-list"></div></div>
+    <form id="student-limits" class="student-section"><label for="daily-limit">Questions per student per day</label><div class="student-limit-row"><input type="number" id="daily-limit" min="1" max="200" required><button type="submit" class="student-primary">Save limit</button></div><p class="student-help">Resets at midnight UTC. Submitted questions count even if stopped or unsuccessful. Students see their own remaining allowance and local reset time.</p></form>
+    <p class="dialog-footer">This list is private. Removing an account revokes its sessions and stops its running answer. Existing conversation history is retained.</p>
+  </dialog>
 </body>
 </html>

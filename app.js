@@ -2,6 +2,7 @@ import { marked } from './vendor/marked.js';
 import DOMPurify from './vendor/purify.js';
 import katex from './vendor/katex.js';
 import { initializeAuth, signedOut, endpoint, authHeaders, requestOptions } from './auth.js';
+import { setupStudentAccess } from './admin.js';
 
 // Tokenize math before Markdown consumes TeX delimiters. HTML is sanitized afterward.
 marked.use({ extensions: [
@@ -30,12 +31,18 @@ function markdown(text, target) {
 }
 function setMode(value) { mode = value; document.querySelectorAll('.mode').forEach(b => { b.classList.toggle('active', b.dataset.mode === value); b.setAttribute('aria-pressed', String(b.dataset.mode === value)); }); }
 function updateControls() {
-  $('send').hidden = busy; $('send').disabled = !state?.auth.ready || !prompt.value.trim();
+  $('send').hidden = busy; $('send').disabled = !state?.auth.ready || !prompt.value.trim() || state?.usage?.remaining === 0;
   $('stop').hidden = !busy; $('new-chat').disabled = busy;
   prompt.disabled = busy;
-  $('connection-label').textContent = state?.auth.ready ? 'Codex connected' : 'Sign-in needed';
+  const admin = state?.access?.role === 'admin';
+  $('connection').disabled = !admin;
+  $('connection').title = admin ? 'Check connection' : 'Tutor status';
+  $('connection-label').textContent = state?.auth.ready ? (admin ? 'Codex connected' : 'Tutor available') : 'Temporarily unavailable';
   $('connection').classList.toggle('offline', !state?.auth.ready);
   if (state?.model) document.querySelector('.model-label').textContent = `${state.model} · Codex CLI`;
+  const usage = state?.usage;
+  $('usage-limit').hidden = !usage || usage.limit === null;
+  if (usage && usage.limit !== null) $('usage-limit').textContent = `${usage.remaining} of ${usage.limit} questions left today · Resets ${new Date(usage.resetsAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
 }
 function renderHistory() {
   const history = $('history'); history.replaceChildren();
@@ -72,6 +79,12 @@ async function refresh() {
   $('note-count').textContent = `${state.materials.length} selected notes`;
   $('sign-out').hidden = !state.access?.enabled;
   $('account-detail').textContent = state.access?.username ? `Signed in as ${state.access.username}` : 'Saved on this server';
+  const admin = state.access?.role === 'admin';
+  $('open-students').hidden = !admin;
+  $('workspace-label').textContent = admin ? 'Your workspace' : 'My conversations';
+  $('photo-button').disabled = !admin;
+  $('photo-button').title = admin ? 'Add your photo' : 'Shihao Yang';
+  $('photo-button').setAttribute('aria-label', admin ? 'Add your photo' : 'Shihao Yang');
   renderHistory(); updateControls();
 }
 async function openConversation(id) {
@@ -81,7 +94,7 @@ async function openConversation(id) {
 }
 function newChat() { if (busy) return; ++loadingGeneration; current = null; sessionStorage.removeItem('avatar-conversation'); notice(); renderHistory(); renderConversation(); prompt.value = ''; prompt.disabled = false; prompt.focus(); updateControls(); $('sidebar').classList.remove('open'); }
 async function submit(event) {
-  event?.preventDefault(); const text = prompt.value.trim(); if (!text || busy || !state.auth.ready) return;
+  event?.preventDefault(); const text = prompt.value.trim(); if (!text || busy || !state?.auth.ready || state?.usage?.remaining === 0) return;
   notice(); busy = true; updateControls(); ++loadingGeneration;
   try {
     if (!current) { current = await (await api('/api/conversations', { method: 'POST' })).json(); sessionStorage.setItem('avatar-conversation', current.id); }
@@ -114,6 +127,7 @@ async function showNote(id) {
 }
 async function loadPhoto() { try { const r = await api('/api/photo'); const photo = $('portrait-image'); const old = photo.src; photo.src = URL.createObjectURL(await r.blob()); photo.hidden = false; if (old.startsWith('blob:')) URL.revokeObjectURL(old); } catch {} }
 $('composer').addEventListener('submit', submit);
+setupStudentAccess(api);
 prompt.addEventListener('input', () => { prompt.style.height = 'auto'; prompt.style.height = `${Math.min(prompt.scrollHeight, 140)}px`; updateControls(); });
 prompt.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } });
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));

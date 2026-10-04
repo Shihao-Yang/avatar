@@ -15,6 +15,7 @@ function showStudio(ready) {
   $('sidebar').hidden = !ready;
   document.querySelector('main').hidden = !ready;
   if (!ready && $('library-dialog').open) $('library-dialog').close();
+  if (!ready && $('student-dialog').open) $('student-dialog').close();
 }
 export function signedOut(message = 'Sign in to enter your personal studio.') {
   token = null;
@@ -44,7 +45,7 @@ export async function initializeAuth() {
     const stored = sessionStorage.getItem(transactionKey);
     sessionStorage.removeItem(transactionKey);
     try {
-      if (params.has('auth_error')) throw new Error(params.get('auth_error') === 'not_allowed' ? 'This studio is currently open only to Shihao’s GitHub account.' : 'Sign-in was cancelled. You can try again.');
+      if (params.has('auth_error')) throw new Error(params.get('auth_error') === 'not_allowed' ? 'Your GitHub account has not been approved yet. Share your GitHub username with Shihao to request access.' : 'Sign-in was cancelled. You can try again.');
       const transaction = JSON.parse(stored || 'null');
       if (!transaction || transaction.flow !== params.get('flow') || Date.now() - transaction.createdAt > 600_000) throw new Error('This sign-in attempt expired. Please start again.');
       const response = await fetch(endpoint('/api/auth/exchange'), { ...requestOptions(), method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: params.get('login'), verifier: transaction.verifier }) });
