@@ -16,6 +16,7 @@ function showStudio(ready) {
   document.querySelector('main').hidden = !ready;
   if (!ready && $('library-dialog').open) $('library-dialog').close();
   if (!ready && $('student-dialog').open) $('student-dialog').close();
+  if (!ready && $('profile-dialog').open) $('profile-dialog').close();
 }
 export function signedOut(message = 'Sign in to enter your personal studio.') {
   token = null;
@@ -45,7 +46,7 @@ export async function initializeAuth() {
     const stored = sessionStorage.getItem(transactionKey);
     sessionStorage.removeItem(transactionKey);
     try {
-      if (params.has('auth_error')) throw new Error(params.get('auth_error') === 'not_allowed' ? 'Your GitHub account has not been approved yet. Share your GitHub username with Shihao to request access.' : 'Sign-in was cancelled. You can try again.');
+      if (params.has('auth_error')) throw new Error(params.get('auth_error') === 'not_allowed' ? 'Your GitHub account does not currently have access. Contact Shihao with your GitHub username for help.' : 'Sign-in was cancelled. You can try again.');
       const transaction = JSON.parse(stored || 'null');
       if (!transaction || transaction.flow !== params.get('flow') || Date.now() - transaction.createdAt > 600_000) throw new Error('This sign-in attempt expired. Please start again.');
       const response = await fetch(endpoint('/api/auth/exchange'), { ...requestOptions(), method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: params.get('login'), verifier: transaction.verifier }) });
@@ -59,6 +60,7 @@ export async function initializeAuth() {
     const response = await fetch(endpoint('/api/auth/config'), requestOptions());
     if (!response.ok) throw new Error();
     const config = await response.json();
+    $('auth-access').textContent = config.accessMode === 'open' ? 'Open to GitHub accounts. Each account has its own profile and conversations.' : 'Access is limited to approved accounts.';
     button.disabled = !config.enabled;
     if (!config.enabled) $('auth-status').textContent = 'GitHub sign-in setup is not finished yet. Please check back shortly.';
   } catch { $('auth-status').textContent = 'The studio is temporarily unreachable. Try again shortly.'; button.disabled = false; }

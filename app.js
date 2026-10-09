@@ -3,6 +3,7 @@ import DOMPurify from './vendor/purify.js';
 import katex from './vendor/katex.js';
 import { initializeAuth, signedOut, endpoint, authHeaders, requestOptions } from './auth.js';
 import { setupStudentAccess } from './admin.js';
+import { setupProfile } from './profile.js';
 
 // Tokenize math before Markdown consumes TeX delimiters. HTML is sanitized afterward.
 marked.use({ extensions: [
@@ -81,6 +82,7 @@ async function refresh() {
   $('account-detail').textContent = state.access?.username ? `Signed in as ${state.access.username}` : 'Saved on this server';
   const admin = state.access?.role === 'admin';
   $('open-students').hidden = !admin;
+  $('open-profile').hidden = admin;
   $('workspace-label').textContent = admin ? 'Your workspace' : 'My conversations';
   $('photo-button').disabled = !admin;
   $('photo-button').title = admin ? 'Add your photo' : 'Shihao Yang';
@@ -128,6 +130,7 @@ async function showNote(id) {
 async function loadPhoto() { try { const r = await api('/api/photo'); const photo = $('portrait-image'); const old = photo.src; photo.src = URL.createObjectURL(await r.blob()); photo.hidden = false; if (old.startsWith('blob:')) URL.revokeObjectURL(old); } catch {} }
 $('composer').addEventListener('submit', submit);
 setupStudentAccess(api);
+const profilePanel = setupProfile(api);
 prompt.addEventListener('input', () => { prompt.style.height = 'auto'; prompt.style.height = `${Math.min(prompt.scrollHeight, 140)}px`; updateControls(); });
 prompt.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } });
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
@@ -145,6 +148,7 @@ $('photo-button').addEventListener('click', () => $('photo-input').click());
 $('photo-input').addEventListener('change', async event => { const file = event.target.files[0]; if (!file) return; try { if (file.size > 2000000) throw new Error('Choose a photo smaller than 2 MB.'); await api('/api/photo', { method: 'POST', headers: { 'Content-Type': file.type }, body: file }); await loadPhoto(); notice('Your photo is saved on this server.'); } catch (e) { notice(e.message); } finally { event.target.value = ''; } });
 if (await initializeAuth()) try {
   await refresh(); await loadPhoto();
+  if (state.access.role === 'student') await profilePanel.open(true);
   if (!state.auth.ready) notice(state.auth.message);
   const saved = sessionStorage.getItem('avatar-conversation');
   if (activeId || saved && state.conversations.some(c => c.id === saved)) await openConversation(activeId || saved);

@@ -20,7 +20,7 @@
       <p class="intro">Your personal companion for questions,<br>explanations, and a little more clarity.</p>
       <button id="github-sign-in" class="github-sign-in" disabled>Sign in with GitHub <span aria-hidden="true">↗</span></button>
       <p id="auth-status" role="status">Sign in to enter your personal studio.</p>
-      <p class="auth-footnote">A personal experiment by Shihao Yang.<br>Access is limited to approved accounts.</p>
+      <p class="auth-footnote">A personal experiment by Shihao Yang.<br><span id="auth-access">Your GitHub account identifies your personal workspace.</span></p>
       <noscript>Enable JavaScript to sign in and use the studio.</noscript>
     </div>
   </section>
@@ -31,6 +31,7 @@
     <nav id="history" aria-label="Conversation history"><p class="empty-history">Good questions start here.</p></nav>
     <div class="sidebar-bottom">
       <button id="open-students" class="student-admin-button" hidden>Student access <span aria-hidden="true">↗</span></button>
+      <button id="open-profile" class="student-admin-button" hidden>My profile <span aria-hidden="true">↗</span></button>
       <button class="library-button" id="open-library"><span aria-hidden="true">▤</span><span>Reference notes<small id="note-count">Loading notes…</small></span><span aria-hidden="true">↗</span></button>
       <div class="account"><div class="mini-avatar">SY</div><div><span id="workspace-label">Personal workspace</span><small id="account-detail">Saved on this server</small></div><button id="sign-out" class="sign-out" hidden>Sign out</button></div>
     </div>
@@ -68,11 +69,19 @@
   <dialog id="student-dialog" aria-labelledby="student-title">
     <div class="dialog-header"><div><p class="eyebrow">ADMINISTRATOR</p><h2 id="student-title">Student access</h2></div><button id="close-students" class="icon-button" aria-label="Close student access">×</button></div>
     <p id="student-status" class="student-help" role="status"></p>
+    <p id="access-summary" class="access-summary"></p>
+    <div class="student-section"><div class="student-heading"><h3 id="student-count">Registered accounts</h3><button id="export-students" class="student-remove" disabled>Download CSV</button></div><div id="student-list"></div><p class="student-help">Names and Georgia Tech emails are optional and self-reported. GitHub sign-in verifies the GitHub account, not course enrollment or email ownership.</p></div>
     <form id="student-form"><label for="student-usernames">Add GitHub accounts</label><p class="student-help">Paste up to 20 usernames, separated by commas or new lines. Use the usernames collected through your class roster.</p><textarea id="student-usernames" rows="3" maxlength="2000" placeholder="One GitHub username per line" required></textarea><button class="student-primary" type="submit">Review accounts</button></form>
     <div id="student-preview" class="student-preview"></div><button id="approve-students" class="student-primary" hidden disabled>Approve accounts</button>
-    <div class="student-section"><h3 id="student-count">Approved accounts</h3><div id="student-list"></div></div>
-    <form id="student-limits" class="student-section"><label for="daily-limit">Questions per student per day</label><div class="student-limit-row"><input type="number" id="daily-limit" min="1" max="200" required><button type="submit" class="student-primary">Save limit</button></div><p class="student-help">Resets at midnight UTC. Submitted questions count even if stopped or unsuccessful. Students see their own remaining allowance and local reset time.</p></form>
-    <p class="dialog-footer">This list is private. Removing an account revokes its sessions and stops its running answer. Existing conversation history is retained.</p>
+    <form id="student-limits" class="student-section"><label for="access-mode">Who can sign in?</label><select id="access-mode"><option value="open">Anyone with GitHub</option><option value="approved">Approved accounts only</option></select><label for="daily-limit">Questions per student per day</label><div class="student-limit-row"><input type="number" id="daily-limit" min="1" max="200" required><button type="submit" class="student-primary">Save settings</button></div><p class="student-help">Resets at midnight UTC. Submitted questions count even if stopped or unsuccessful. Students see their own remaining allowance and local reset time.</p></form>
+    <p class="dialog-footer">This list is private. Blocking an account revokes its sessions, stops its running answer, and prevents another sign-in. Existing conversation history is retained. You can later restrict sign-in to approved accounts.</p>
+  </dialog>
+  <dialog id="profile-dialog" aria-labelledby="profile-title">
+    <div class="dialog-header"><div><p class="eyebrow">YOUR ACCOUNT</p><h2 id="profile-title">My profile</h2></div><button id="close-profile" class="icon-button" aria-label="Close profile">×</button></div>
+    <p id="profile-account" class="student-help"></p>
+    <p class="student-help">Help Shihao match your GitHub account to the class roster. Both fields are optional. These self-reported details are visible only to you and Shihao, and are not sent to the tutor.</p>
+    <form id="profile-form"><label for="profile-name">Full name (optional)</label><input id="profile-name" autocomplete="name" maxlength="120"><label for="profile-email">Georgia Tech email (optional)</label><input id="profile-email" type="email" autocomplete="email" maxlength="254" placeholder="yourname@gatech.edu"><p id="profile-status" class="student-help" role="status"></p><button id="save-profile" class="student-primary" type="submit">Save and continue</button></form>
+    <p class="dialog-footer">Your conversations are separate from other accounts. You can return to My profile to update these details.</p>
   </dialog>
 </body>
 </html>
