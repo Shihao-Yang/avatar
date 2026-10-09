@@ -12,6 +12,7 @@ marked.use({ extensions: [
 ] });
 const $ = id => document.getElementById(id);
 let state, current = null, mode = 'explain', busy = false, activeId = null, pollTimer, loadingGeneration = 0;
+let photoUrl = null;
 const prompt = $('prompt');
 function notice(message = '') { $('notice').textContent = message; $('notice').hidden = !message; }
 async function api(path, options = {}) {
@@ -127,7 +128,21 @@ async function showNote(id) {
   const back = document.createElement('button'); back.className = 'back-notes'; back.textContent = '← All reference notes'; back.addEventListener('click', showLibrary);
   const text = document.createElement('div'); text.className = 'message-content'; markdown(note.text, text); content.append(back, text); if (!$('library-dialog').open) $('library-dialog').showModal();
 }
-async function loadPhoto() { try { const r = await api('/api/photo'); const photo = $('portrait-image'); const old = photo.src; photo.src = URL.createObjectURL(await r.blob()); photo.hidden = false; if (old.startsWith('blob:')) URL.revokeObjectURL(old); } catch {} }
+function clearPhoto() {
+  for (const id of ['portrait-image', 'brand-photo']) { const photo = $(id); photo.removeAttribute('src'); photo.hidden = true; }
+  $('brand-initial').hidden = false;
+  if (photoUrl) URL.revokeObjectURL(photoUrl);
+  photoUrl = null;
+}
+async function loadPhoto() {
+  try {
+    const r = await api('/api/photo'), next = URL.createObjectURL(await r.blob());
+    const previous = photoUrl; photoUrl = next;
+    for (const id of ['portrait-image', 'brand-photo']) { const photo = $(id); photo.src = next; photo.hidden = false; }
+    $('brand-initial').hidden = true;
+    if (previous) URL.revokeObjectURL(previous);
+  } catch {}
+}
 $('composer').addEventListener('submit', submit);
 setupStudentAccess(api);
 const profilePanel = setupProfile(api);
@@ -136,7 +151,7 @@ prompt.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey &
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 document.querySelectorAll('.suggestion').forEach(b => b.addEventListener('click', () => { setMode(b.dataset.mode); prompt.value = b.dataset.prompt; updateControls(); prompt.focus(); }));
 $('new-chat').addEventListener('click', newChat);
-$('sign-out').addEventListener('click', async () => { try { await api('/api/logout', { method: 'POST' }); sessionStorage.removeItem('avatar-conversation'); clearInterval(pollTimer); current = null; state = null; $('history').replaceChildren(); $('messages').replaceChildren(); $('library-content').replaceChildren(); const photo = $('portrait-image'); if (photo.src.startsWith('blob:')) URL.revokeObjectURL(photo.src); photo.removeAttribute('src'); photo.hidden = true; signedOut(); } catch (e) { notice(e.message); } });
+$('sign-out').addEventListener('click', async () => { try { await api('/api/logout', { method: 'POST' }); sessionStorage.removeItem('avatar-conversation'); clearInterval(pollTimer); current = null; state = null; $('history').replaceChildren(); $('messages').replaceChildren(); $('library-content').replaceChildren(); clearPhoto(); signedOut(); } catch (e) { notice(e.message); } });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 document.addEventListener('keydown', e => { if (state && (e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); newChat(); } });
 $('stop').addEventListener('click', async () => { if (!activeId) return; try { await api(`/api/conversations/${activeId}/cancel`, { method: 'POST' }); } catch (e) { notice(e.message); } });
