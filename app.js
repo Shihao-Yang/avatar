@@ -6,7 +6,10 @@ import { setupStudentAccess } from './admin.js';
 import { setupProfile } from './profile.js';
 
 // Tokenize math before Markdown consumes TeX delimiters. HTML is sanitized afterward.
-marked.use({ extensions: [
+marked.use({ renderer: { image({ href }) {
+  if (/^\/materials\/[a-z0-9-]+\/[a-z0-9-]+\.png$/.test(href)) return `<span data-course-figure="${href}">Loading course figure…</span>`;
+  return '';
+} }, extensions: [
   { name: 'displayMath', level: 'block', start: src => { const i = src.search(/\$\$|\\\[/); return i < 0 ? undefined : i; }, tokenizer(src) { const m = /^(?:\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\])(?:\n|$)/.exec(src); if (m) return { type: 'displayMath', raw: m[0], text: m[1] ?? m[2] }; }, renderer: t => katex.renderToString(t.text, { displayMode: true, throwOnError: false, trust: false, maxExpand: 1000 }) },
   { name: 'inlineMath', level: 'inline', start: src => { const i = src.search(/\\\(|\$/); return i < 0 ? undefined : i; }, tokenizer(src) { const m = /^(?:\\\(([\s\S]+?)\\\)|\$([^$\n]+?)\$)/.exec(src); if (m) return { type: 'inlineMath', raw: m[0], text: m[1] ?? m[2] }; }, renderer: t => katex.renderToString(t.text, { throwOnError: false, trust: false, maxExpand: 1000 }) }
 ] });
@@ -23,6 +26,22 @@ async function api(path, options = {}) {
 }
 function markdown(text, target) {
   target.innerHTML = DOMPurify.sanitize(marked.parse(text), { FORBID_TAGS: ['img', 'style', 'form', 'input', 'button', 'iframe', 'video', 'audio', 'script', 'object'], FORBID_ATTR: ['id', 'name'] });
+  target.querySelectorAll('[data-course-figure]').forEach(async placeholder => {
+    const path = placeholder.dataset.courseFigure;
+    const match = /^\/materials\/([a-z0-9-]+)\/([a-z0-9-]+\.png)$/.exec(path);
+    const material = state?.materials.find(m => m.id === match?.[1]);
+    if (!material?.assets?.some(a => a.id === match?.[2])) { placeholder.remove(); return; }
+    try {
+      const response = await api('/api' + path);
+      const blob = await response.blob();
+      if (!placeholder.isConnected) return;
+      const img = document.createElement('img');
+      const url = URL.createObjectURL(blob);
+      img.alt = material.title; img.style.maxWidth = '100%'; img.style.height = 'auto';
+      img.onload = img.onerror = () => URL.revokeObjectURL(url);
+      img.src = url; placeholder.replaceWith(img);
+    } catch { placeholder.textContent = 'Course figure could not be loaded. Reopen this conversation to retry.'; }
+  });
   target.querySelectorAll('a').forEach(a => {
     const url = new URL(a.getAttribute('href') || '', location.origin);
     if (url.origin === location.origin && /^\/materials\/[a-z0-9-]+$/.test(url.pathname)) {
