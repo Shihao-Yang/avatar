@@ -97,7 +97,7 @@ function renderConversation(partial = '') {
 }
 async function refresh() {
   state = await (await api('/api/state')).json(); activeId = state.activeId;
-  $('note-count').textContent = `${state.materials.length} selected notes`;
+  $('note-count').textContent = `${state.materials.length} notes${state.courseLibrary ? ` · ${state.courseLibrary.files} course files` : ''}`;
   $('sign-out').hidden = !state.access?.enabled;
   $('account-detail').textContent = state.access?.username ? `Signed in as ${state.access.username}` : 'Saved on this server';
   const admin = state.access?.role === 'admin';
